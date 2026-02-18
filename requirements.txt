@@ -1,0 +1,20 @@
+# FreeWork Data Scraper — Dependencies
+# Compatible: Windows, macOS, Linux
+
+# Browser automation
+selenium>=4.20.0
+webdriver-manager>=4.0.0
+
+# HTML parsing
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# Data handling
+pandas>=2.2.0
+openpyxl>=3.1.0
+
+# Web UI
+streamlit>=1.30.0
+
+# Environment
+python-dotenv>=1.0.0
