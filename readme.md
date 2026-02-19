@@ -1,31 +1,212 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="FreeWork Data Scraper" width="100%"/>
+  <img src="assets/banner.svg" alt="FreeWork Data Scraper" width="900">
 </p>
 
 <p align="center">
-  <strong>Extract freelance missions, salaries & contracts from <a href="https://www.free-work.com/">free-work.com</a> at scale.</strong>
+  <strong>Extract freelance missions, salaries & contracts from free-work.com at scale — Streamlit UI & CLI.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-575ECF?style=flat-square" alt="Version"/>
-  <img src="https://img.shields.io/badge/python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"/>
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square" alt="Platform"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-575ECF?style=flat-square" alt="License: MIT"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-575ECF?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+"></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-575ECF?style=flat-square" alt="Platform">
+  <a href="https://www.selenium.dev/"><img src="https://img.shields.io/badge/Selenium-4.20%2B-575ECF?style=flat-square&logo=selenium&logoColor=white" alt="Selenium"></a>
+  <a href="https://github.com/SoCloseSociety/FreeWorkDataScraper/stargazers"><img src="https://img.shields.io/github/stars/SoCloseSociety/FreeWorkDataScraper?style=flat-square&color=575ECF" alt="GitHub Stars"></a>
+  <a href="https://github.com/SoCloseSociety/FreeWorkDataScraper/issues"><img src="https://img.shields.io/github/issues/SoCloseSociety/FreeWorkDataScraper?style=flat-square&color=575ECF" alt="Issues"></a>
+  <a href="https://github.com/SoCloseSociety/FreeWorkDataScraper/network/members"><img src="https://img.shields.io/github/forks/SoCloseSociety/FreeWorkDataScraper?style=flat-square&color=575ECF" alt="Forks"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#key-features">Features</a> &bull;
+  <a href="#configuration">Configuration</a> &bull;
+  <a href="#faq">FAQ</a> &bull;
+  <a href="#contributing">Contributing</a>
 </p>
 
 ---
 
-## Features
+## What is FreeWork Data Scraper?
 
-- **18 data fields** per job — title, company, salary/TJM, remote policy, duration, experience, skills, description, and more
-- **Streamlit web UI** — visual dashboard with live progress, metrics, and one-click downloads
-- **CLI mode** — scriptable command-line interface with full argument support
-- **Excel export** — color-coded headers, salary highlighting, clickable links, auto-filters, and a summary sheet
-- **CSV export** — UTF-8 encoded, ready for any data tool
-- **Smart pagination** — automatically detects and navigates all result pages
-- **SVG icon matching** — identifies job attributes (salary, remote, duration, etc.) by matching SVG icon paths
-- **Cross-platform** — works on Windows, macOS (Intel & Apple Silicon), and Linux
-- **Human-like behavior** — random delays between requests to avoid detection
+**FreeWork Data Scraper** is a free, open-source **freelance job scraper** built with Python and Selenium. It extracts job postings from [free-work.com](https://www.free-work.com/) at scale — collecting 18 data fields per job including title, company, salary/TJM, remote policy, duration, experience level, skills, and full descriptions.
+
+The tool offers both a **Streamlit web dashboard** (recommended) with live progress and one-click downloads, and a **CLI** for scriptable automation. Output comes as professionally formatted Excel files or clean CSV.
+
+### Who is this for?
+
+- **Freelancers** monitoring the job market and tracking rates
+- **Recruiters** building candidate pipelines and tracking demand
+- **Data Analysts** studying freelance market trends and salary data
+- **Startup Founders** researching talent availability and pricing
+- **HR Departments** benchmarking contractor rates by skill
+- **Developers** learning web scraping with Selenium and Streamlit
+
+### Key Features
+
+- **18 Data Fields** - Title, company, salary/TJM, remote policy, duration, experience, skills, description, and more
+- **Streamlit Web UI** - Visual dashboard with live progress, metrics, and one-click downloads
+- **CLI Mode** - Scriptable command-line interface with full argument support
+- **Excel Export** - Color-coded headers, salary highlighting, clickable links, auto-filters, summary sheet
+- **CSV Export** - UTF-8 encoded, ready for any data tool
+- **Smart Pagination** - Automatically detects and navigates all result pages
+- **SVG Icon Matching** - Identifies job attributes by matching SVG icon paths
+- **Human-Like Behavior** - Random delays between requests to avoid detection
+- **Cross-Platform** - Works on Windows, macOS (Intel & Apple Silicon), and Linux
+- **Free & Open Source** - MIT license, no API key required
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+| Requirement | Details |
+|-------------|---------|
+| **Python** | Version 3.10 or higher ([Download](https://www.python.org/downloads/)) |
+| **Google Chrome** | Latest version ([Download](https://www.google.com/chrome/)) |
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/SoCloseSociety/FreeWorkDataScraper.git
+cd FreeWorkDataScraper
+
+# 2. (Recommended) Create a virtual environment
+python -m venv venv
+
+# Activate it:
+# Windows:
+venv\Scripts\activate
+# macOS / Linux:
+source venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+### Usage
+
+#### Streamlit Web UI (recommended)
+
+```bash
+streamlit run app.py
+```
+
+This opens a dashboard in your browser where you can:
+- Paste a FreeWork search URL
+- Configure max pages, headless mode, and export format
+- Watch live progress with real-time logs
+- View results in an interactive table
+- Download Excel and CSV files directly
+
+#### Command Line
+
+```bash
+# Interactive mode — prompts for the URL
+python main.py
+
+# Direct URL mode
+python main.py --url "https://www.free-work.com/fr/tech-it/jobs?query=python&contracts=contractor"
+
+# With options
+python main.py \
+  --url "https://www.free-work.com/fr/tech-it/jobs?query=devops" \
+  --max-pages 5 \
+  --format excel \
+  --output results \
+  --no-headless
+```
+
+#### All CLI Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--url, -u` | FreeWork search URL (with filters applied) | (interactive) |
+| `--output, -o` | Output directory for exported files | `output` |
+| `--format, -f` | Export format: `both`, `excel`, `csv` | `both` |
+| `--max-pages` | Max pages to scrape (0 = all) | `0` |
+| `--headless` | Run Chrome in headless mode | On |
+| `--no-headless` | Run Chrome with visible window | Off |
+| `--version, -v` | Show version and exit | — |
+
+---
+
+## How It Works
+
+```
+FreeWork Search URL
+        │
+        ▼
+┌────────────────────────┐
+│  1. Navigate to URL    │
+│  2. Detect pagination  │
+│  3. Collect job links  │
+├────────────────────────┤
+│  4. Visit each job     │
+│  5. Parse 18 fields    │
+│  6. SVG icon matching  │
+├────────────────────────┤
+│  7. Export Excel/CSV   │
+│  8. Summary statistics │
+└────────────────────────┘
+```
+
+---
+
+## Extracted Data Fields
+
+| Field | Description |
+|-------|-------------|
+| Title | Job posting title |
+| Company | Company name |
+| Company Location | Company city |
+| Category | Job category (freelance, CDI, etc.) |
+| Location | Mission location |
+| Remote | Remote work policy |
+| Salary / TJM | Daily rate or salary |
+| Duration | Contract duration |
+| Experience | Required experience level |
+| Start Date | Mission start date |
+| Publish Date | When the posting was published |
+| Skills | Technologies and skills listed |
+| Sector | Industry sector |
+| Description | Full job description |
+| Job URL | Link to the original posting |
+| Page | Search result page number |
+| Scraped At | Timestamp of extraction |
+| Status | Extraction status (ok/error) |
+
+---
+
+## Excel Output
+
+The Excel export includes:
+- **Color-coded column headers** grouped by category (identity, details, contract, dates, skills, content, meta)
+- **Salary highlighting** — green for jobs with salary info, red for missing
+- **Remote highlighting** — purple tint for jobs with remote policy
+- **Clickable URLs** — job links are hyperlinked
+- **Auto-filters** on all columns
+- **Frozen header row** and first column
+- **Alternating row colors** for readability
+- **Summary sheet** with statistics (total jobs, salary %, remote %, experience breakdown)
+
+---
+
+## Tech Stack
+
+| Technology | Role |
+|------------|------|
+| [Python 3.10+](https://www.python.org/) | Core language |
+| [Selenium 4.20+](https://www.selenium.dev/) | Browser automation |
+| [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) | HTML parsing |
+| [lxml](https://lxml.de/) | Fast HTML parser backend |
+| [Pandas](https://pandas.pydata.org/) | Data manipulation & CSV export |
+| [openpyxl](https://openpyxl.readthedocs.io/) | Excel file creation & formatting |
+| [Streamlit](https://streamlit.io/) | Web UI dashboard |
+| [webdriver-manager](https://github.com/SergeyPirogov/webdriver_manager) | Automatic ChromeDriver management |
+
+---
 
 ## Project Structure
 
@@ -44,141 +225,120 @@ FreeWorkDataScraper/
 │   │   └── job_extractor.py             # Job detail page parser
 │   └── export/
 │       └── exporter.py                  # CSV & Excel export with formatting
-└── assets/                              # Branding assets (banner, logo)
+├── assets/
+│   └── banner.svg                       # Project banner
+├── LICENSE                              # MIT License
+├── README.md                            # This file
+├── CONTRIBUTING.md                      # Contribution guidelines
+└── .gitignore                           # Git ignore rules
 ```
 
-## Prerequisites
+---
 
-- **Python 3.10+**
-- **Google Chrome** installed on your system
-- ChromeDriver is managed automatically via `webdriver-manager`
+## Troubleshooting
 
-## Installation
+### Chrome driver issues
+
+The scraper uses `webdriver-manager` to automatically download the correct ChromeDriver. If you encounter issues:
 
 ```bash
-# Clone the repository
-git clone https://github.com/SoCloseSociety/FreeWorkDataScraper.git
-cd FreeWorkDataScraper
-
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate        # macOS / Linux
-# venv\Scripts\activate         # Windows
-
-# Install dependencies
-pip install -r requirements.txt
+pip install --upgrade webdriver-manager
 ```
 
-## Usage
+### No jobs found
 
-### 1. Streamlit Web UI (recommended)
+If the scraper doesn't find any jobs:
+1. Verify the FreeWork URL is valid and returns results in your browser
+2. Try without `--headless` to see what's happening
+3. FreeWork may have changed its HTML structure — open an issue
+
+### Streamlit won't start
 
 ```bash
+pip install --upgrade streamlit
 streamlit run app.py
 ```
 
-This opens a dashboard in your browser where you can:
-- Paste a FreeWork search URL
-- Configure max pages, headless mode, and export format
-- Watch live progress with real-time logs
-- View results in an interactive table
-- Download Excel and CSV files directly
+### Excel export fails
 
-### 2. Command Line
+Make sure `openpyxl` is installed:
 
 ```bash
-# Interactive mode — prompts for the URL
-python main.py
-
-# Direct URL mode
-python main.py --url "https://www.free-work.com/fr/tech-it/jobs?query=python&contracts=contractor"
-
-# With options
-python main.py \
-  --url "https://www.free-work.com/fr/tech-it/jobs?query=devops" \
-  --max-pages 5 \
-  --format excel \
-  --output results \
-  --no-headless
+pip install openpyxl
 ```
 
-#### CLI Options
+---
 
-| Flag | Description | Default |
-|---|---|---|
-| `--url`, `-u` | FreeWork search URL (with filters applied) | *(interactive prompt)* |
-| `--output`, `-o` | Output directory for exported files | `output` |
-| `--format`, `-f` | Export format: `both`, `excel`, `csv` | `both` |
-| `--max-pages` | Max pages to scrape (0 = all) | `0` |
-| `--headless` | Run Chrome in headless mode | `True` |
-| `--no-headless` | Run Chrome with visible window | `False` |
-| `--version`, `-v` | Show version and exit | — |
+## FAQ
 
-## How It Works
+**Q: Is this free?**
+A: Yes. FreeWork Data Scraper is 100% free and open source under the MIT license.
 
-1. **Navigate** — Opens the FreeWork search URL in a headless Chrome browser
-2. **Paginate** — Detects total result pages from pagination buttons and iterates through each
-3. **Collect** — Extracts all job detail links from each search results page
-4. **Extract** — Visits each job page and parses 18 data fields using BeautifulSoup, including SVG icon matching for structured attributes (salary, remote, duration, experience, location, start date)
-5. **Export** — Generates professionally formatted Excel (with color-coded headers, conditional formatting, summary sheet) and/or CSV files
+**Q: Do I need an API key?**
+A: No. This tool uses browser automation (Selenium), no API key needed.
 
-## Extracted Data Fields
+**Q: How many jobs can I scrape?**
+A: No hard limit. The scraper extracts all jobs from all pages of your search results. Use `--max-pages` to limit.
 
-| Field | Description |
-|---|---|
-| Title | Job posting title |
-| Company | Company name |
-| Company Location | Company city |
-| Category | Job category (e.g., freelance, CDI) |
-| Location | Mission location |
-| Remote | Remote work policy |
-| Salary / TJM | Daily rate or salary |
-| Duration | Contract duration |
-| Experience | Required experience level |
-| Start Date | Mission start date |
-| Publish Date | When the posting was published |
-| Skills | Technologies and skills listed |
-| Sector | Industry sector |
-| Description | Full job description |
-| Job URL | Link to the original posting |
-| Page | Search result page number |
-| Scraped At | Timestamp of extraction |
-| Status | Extraction status (ok/error) |
+**Q: Can I export to Excel?**
+A: Yes. The Excel export includes color-coded headers, salary highlighting, clickable links, and a summary statistics sheet.
 
-## Excel Output
+**Q: Does it work on Mac / Linux?**
+A: Yes. Fully cross-platform on Windows, macOS (Intel & Apple Silicon), and Linux.
 
-The Excel export includes:
-- **Color-coded column headers** grouped by category (identity, details, contract, dates, skills, content, meta)
-- **Salary highlighting** — green for jobs with salary info, red for missing
-- **Remote highlighting** — purple tint for jobs with remote policy
-- **Clickable URLs** — job links are hyperlinked
-- **Auto-filters** on all columns
-- **Frozen header row** and first column
-- **Alternating row colors** for readability
-- **Summary sheet** with statistics (total jobs, salary %, remote %, experience breakdown)
+**Q: Web UI or CLI?**
+A: The Streamlit web UI is recommended for interactive use. The CLI is better for scripting and automation.
 
-## Dependencies
+---
 
-| Package | Purpose |
-|---|---|
-| `selenium` | Browser automation |
-| `webdriver-manager` | Automatic ChromeDriver management |
-| `beautifulsoup4` | HTML parsing |
-| `lxml` | Fast HTML parser backend |
-| `pandas` | Data manipulation and CSV export |
-| `openpyxl` | Excel file creation and formatting |
-| `streamlit` | Web UI dashboard |
+## Alternatives Comparison
+
+| Feature | FreeWork Data Scraper | Manual Copy-Paste | Paid Job Scrapers |
+|---------|----------------------|-------------------|--------------------|
+| Price | **Free** | Free | $50-200/mo |
+| 18 data fields | Yes | Manual | Varies |
+| Excel with formatting | Yes | No | Basic |
+| Open source | Yes | N/A | No |
+| Web UI dashboard | Yes | N/A | Yes |
+| API key required | No | No | Yes |
+| Cross-platform | Yes | Yes | Web only |
+
+---
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) before submitting a pull request.
+
+---
 
 ## License
 
-[MIT License](LICENSE) — Copyright (c) 2022 Enzo Day
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## Disclaimer
+
+This tool is provided for **educational and research purposes only**. Scraping free-work.com may be subject to their Terms of Service. The authors are not responsible for any misuse or consequences arising from the use of this software.
 
 ---
 
 <p align="center">
-  Built by <a href="https://soclose.co"><strong>SoClose</strong></a> — Digital Innovation Through Automation & AI
+  <strong>If this project helps you, please give it a star!</strong><br>
+  It helps others discover this tool.<br><br>
+  <a href="https://github.com/SoCloseSociety/FreeWorkDataScraper">
+    <img src="https://img.shields.io/github/stars/SoCloseSociety/FreeWorkDataScraper?style=for-the-badge&logo=github&color=575ECF" alt="Star this repo">
+  </a>
+</p>
+
+<br>
+
+<p align="center">
+  <sub>Built with purpose by <a href="https://soclose.co"><strong>SoClose</strong></a> &mdash; Digital Innovation Through Automation & AI</sub><br>
+  <sub>
+    <a href="https://soclose.co">Website</a> &bull;
+    <a href="https://linkedin.com/company/soclose-agency">LinkedIn</a> &bull;
+    <a href="https://twitter.com/SoCloseAgency">Twitter</a> &bull;
+    <a href="mailto:hello@soclose.co">Contact</a>
+  </sub>
 </p>
