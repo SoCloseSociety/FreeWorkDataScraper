@@ -1,16 +1,9 @@
-"""FreeWork Data Scraper — CLI entry point.
-
-Usage:
-    python main.py                          # Interactive mode
-    python main.py --url "https://..."      # Direct URL mode
-    streamlit run app.py                    # Streamlit UI mode
-"""
-
 from __future__ import annotations
 
 import argparse
 import logging
 import sys
+import re
 
 from freework_scraper import __version__
 from freework_scraper.scraper.browser import BrowserManager
@@ -27,6 +20,8 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger("freework")
+
+TRUSTED_DOMAIN = r"^https://www\.free-work\.com/"
 
 
 def parse_args() -> argparse.Namespace:
@@ -78,6 +73,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_url(url: str) -> bool:
+    return re.match(TRUSTED_DOMAIN, url) is not None
+
+
 def main() -> None:
     args = parse_args()
 
@@ -86,8 +85,8 @@ def main() -> None:
     if not search_url:
         search_url = input("Entrez l'URL de recherche FreeWork : ").strip()
 
-    if not search_url:
-        logger.error("Aucune URL fournie. Abandon.")
+    if not search_url or not validate_url(search_url):
+        logger.error("URL invalide ou non fournie. Abandon.")
         sys.exit(1)
 
     headless = args.headless and not args.no_headless
