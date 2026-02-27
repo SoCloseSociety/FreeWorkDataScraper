@@ -1,5 +1,3 @@
-"""Cross-platform Selenium browser manager for FreeWork scraper."""
-
 from __future__ import annotations
 
 import logging
@@ -18,7 +16,7 @@ logger = logging.getLogger(__name__)
 class BrowserManager:
     """Manages Selenium Chrome browser lifecycle — Windows, Mac & Linux."""
 
-    def __init__(self, headless: bool = True):
+    def __init__(self, headless: bool = False):
         self.headless = headless
         self.driver: webdriver.Chrome | None = None
 
@@ -82,7 +80,7 @@ class BrowserManager:
         self.driver.get(url)
 
     @property
-    def page_source(self) -> str:
+def page_source(self) -> str:
         """Get current page HTML source."""
         if not self.driver:
             raise RuntimeError("Browser not started.")
