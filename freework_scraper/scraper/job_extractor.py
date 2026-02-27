@@ -1,13 +1,12 @@
-"""Job detail page extractor for FreeWork."""
-
 from __future__ import annotations
 
 import logging
 import re
-import time
+time
 import random
 from datetime import datetime
-from typing import Callable
+from typing import Callable, List
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from bs4 import BeautifulSoup
 
@@ -28,7 +27,6 @@ from freework_scraper.scraper.browser import BrowserManager
 
 logger = logging.getLogger(__name__)
 
-
 def _match_icon(svg_d: str) -> str | None:
     """Match an SVG path 'd' attribute to a known icon type."""
     if not svg_d:
@@ -39,7 +37,6 @@ def _match_icon(svg_d: str) -> str | None:
             return icon_name
     return None
 
-
 def _clean_text(text: str | None) -> str:
     """Clean extracted text: strip whitespace and normalize spaces."""
     if not text:
@@ -47,7 +44,6 @@ def _clean_text(text: str | None) -> str:
     cleaned = text.strip()
     cleaned = re.sub(r"\s+", " ", cleaned)
     return cleaned
-
 
 def _extract_header(soup: BeautifulSoup) -> dict[str, str]:
     """Extract header information (title, company, location, category)."""
@@ -71,14 +67,12 @@ def _extract_header(soup: BeautifulSoup) -> dict[str, str]:
 
     return result
 
-
 def _extract_publish_date(soup: BeautifulSoup) -> str:
     """Extract job publish date."""
     time_tag = soup.find("time", class_=lambda c: c and "text-sm" in c)
     if not time_tag:
         time_tag = soup.select_one(SELECTOR_JOB_TIME)
     return _clean_text(time_tag.text) if time_tag else ""
-
 
 def _extract_description(soup: BeautifulSoup) -> str:
     """Extract full job description content."""
@@ -93,7 +87,6 @@ def _extract_description(soup: BeautifulSoup) -> str:
     paragraphs = content_div.get_text(separator="\n").split("\n")
     cleaned = [line.strip() for line in paragraphs if line.strip()]
     return "\n".join(cleaned)
-
 
 def _extract_icon_attributes(soup: BeautifulSoup) -> dict[str, str]:
     """Extract job attributes from SVG icon containers."""
@@ -128,7 +121,6 @@ def _extract_icon_attributes(soup: BeautifulSoup) -> dict[str, str]:
 
     return attributes
 
-
 def _extract_skills(soup: BeautifulSoup) -> str:
     """Extract skills/technologies from the job page."""
     skills = []
@@ -149,7 +141,6 @@ def _extract_skills(soup: BeautifulSoup) -> str:
 
     return ", ".join(skills)
 
-
 def _extract_sector(soup: BeautifulSoup) -> str:
     """Extract job sector/industry if available."""
     # Look for breadcrumbs or category links
@@ -161,10 +152,8 @@ def _extract_sector(soup: BeautifulSoup) -> str:
 
     return ""
 
-
 def extract_job_detail(browser: BrowserManager, job_url: str, search_url: str = "", page_num: int = 0) -> FreeWorkJob:
-    """
-    Navigate to a job detail page and extract all available data.
+    """Navigate to a job detail page and extract all available data.
 
     Args:
         browser: Browser manager instance.
@@ -226,15 +215,13 @@ def extract_job_detail(browser: BrowserManager, job_url: str, search_url: str = 
 
     return job
 
-
 def extract_all_jobs(
     browser: BrowserManager,
-    job_links: list[str],
+    job_links: List[str],
     search_url: str = "",
     on_job_done: Callable | None = None,
-) -> list[FreeWorkJob]:
-    """
-    Extract details for all job links.
+) -> List[FreeWorkJob]:
+    """Extract details for all job links.
 
     Args:
         browser: Browser manager instance.
@@ -245,20 +232,33 @@ def extract_all_jobs(
     Returns:
         List of FreeWorkJob instances.
     """
-    jobs: list[FreeWorkJob] = []
+    jobs: List[FreeWorkJob] = []
     total = len(job_links)
 
-    for idx, url in enumerate(job_links):
-        logger.info("Extracting job %d/%d: %s", idx + 1, total, url)
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_url = {executor.submit(extract_job_detail, browser, url, search_url=search_url): url for url in job_links}
+        for future in as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                job = future.result()
+                jobs.append(job)
 
-        job = extract_job_detail(browser, url, search_url=search_url)
-        jobs.append(job)
+                if on_job_done:
+                    idx = job_links.index(url) + 1
+                    on_job_done(idx, total, job)
 
-        if on_job_done:
-            on_job_done(idx + 1, total, job)
+            except Exception as exc:
+                logger.error("Error extracting %s: %s", url, exc)
+                job = FreeWorkJob(
+                    job_url=url,
+                    search_url=search_url,
+                    status="error",
+                    error_message=str(exc),
+                )
+                jobs.append(job)
 
-        # Delay between requests
-        time.sleep(random.uniform(REQUEST_DELAY_MIN, REQUEST_DELAY_MAX))
+            # Delay between requests
+            time.sleep(random.uniform(REQUEST_DELAY_MIN, REQUEST_DELAY_MAX))
 
     valid = sum(1 for j in jobs if j.status == "ok")
     errors = sum(1 for j in jobs if j.status == "error")
