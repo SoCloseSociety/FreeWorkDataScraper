@@ -1,13 +1,5 @@
-"""Export FreeWork jobs to CSV and Excel with professional formatting."""
-
-from __future__ import annotations
-
-import logging
-import re
-from datetime import datetime
-from pathlib import Path
-
-import pandas as pd
+import numpy as np
+from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
@@ -76,7 +68,7 @@ THIN_BORDER = Border(
     left=Side(style="thin", color="D9D9D9"),
     right=Side(style="thin", color="D9D9D9"),
     top=Side(style="thin", color="D9D9D9"),
-    bottom=Side(style="thin", color="D9D9D9"),
+    bottom=Side(style="thin", color="D9D9D9")
 )
 
 ALIGNMENT_WRAP = Alignment(wrap_text=True, vertical="top")
@@ -103,7 +95,6 @@ _COL_WIDTHS = {
     "scraped_at": 22,
     "status": 10,
 }
-
 
 # ======================================================================
 # Public API
@@ -143,7 +134,6 @@ def export_jobs(
 
     return created
 
-
 # ======================================================================
 # DataFrame preparation
 # ======================================================================
@@ -179,118 +169,118 @@ def _prepare_dataframe(jobs: list[FreeWorkJob]) -> pd.DataFrame:
 
     return df
 
-
 # ======================================================================
 # Excel export with formatting
 # ======================================================================
 
 def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
     """Write a professionally formatted Excel file."""
-    with pd.ExcelWriter(path, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="FreeWork Jobs")
-        ws = writer.sheets["FreeWork Jobs"]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "FreeWork Jobs"
 
-        num_rows = len(df) + 1  # +1 for header
-        num_cols = len(df.columns)
+    num_rows = len(df) + 1  # +1 for header
+    num_cols = len(df.columns)
 
-        # --- Row height ---
-        ws.row_dimensions[1].height = 30
+    # --- Row height ---
+    ws.row_dimensions[1].height = 30
 
-        # --- Header formatting ---
+    # --- Header formatting ---
+    for col_idx in range(1, num_cols + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        key = COLUMN_KEYS[col_idx - 1]
+        category = COLUMN_CATEGORIES.get(key, "meta")
+
+        cell.font = FONT_HEADER
+        cell.fill = _HEADER_FILLS.get(category, _HEADER_FILLS["meta"])
+        cell.alignment = ALIGNMENT_CENTER
+        cell.border = THIN_BORDER
+
+    # --- Column widths ---
+    for col_idx in range(1, num_cols + 1):
+        key = COLUMN_KEYS[col_idx - 1]
+        width = _COL_WIDTHS.get(key, 15)
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    # --- Precompute column indices ---
+    title_col_idx = COLUMN_KEYS.index("title") + 1
+    salary_col_idx = COLUMN_KEYS.index("salary") + 1
+    remote_col_idx = COLUMN_KEYS.index("remote") + 1
+    url_col_idx = COLUMN_KEYS.index("job_url") + 1
+    status_col_idx = COLUMN_KEYS.index("status") + 1
+
+    # --- Data rows ---
+    for row_idx in range(2, num_rows + 1):
+        is_alt_row = (row_idx - 2) % 2 == 1
+
         for col_idx in range(1, num_cols + 1):
-            cell = ws.cell(row=1, column=col_idx)
-            key = COLUMN_KEYS[col_idx - 1]
-            category = COLUMN_CATEGORIES.get(key, "meta")
-
-            cell.font = FONT_HEADER
-            cell.fill = _HEADER_FILLS.get(category, _HEADER_FILLS["meta"])
-            cell.alignment = ALIGNMENT_CENTER
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.font = FONT_DEFAULT
             cell.border = THIN_BORDER
+            cell.alignment = ALIGNMENT_WRAP
 
-        # --- Column widths ---
+            # Alternating row background
+            if is_alt_row:
+                cell.fill = FILL_ALT_ROW
+
+        # --- Title column: bold ---
+        title_cell = ws.cell(row=row_idx, column=title_col_idx)
+        title_cell.font = FONT_TITLE
+
+        # --- Salary cell color coding ---
+        salary_cell = ws.cell(row=row_idx, column=salary_col_idx)
+        salary_val = str(salary_cell.value or "").strip()
+        if salary_val and salary_val != "None":
+            salary_cell.fill = FILL_HAS_SALARY
+            salary_cell.font = FONT_BOLD
+        else:
+            salary_cell.fill = FILL_NO_SALARY
+            salary_cell.value = ""
+
+        # --- Remote cell color coding ---
+        remote_cell = ws.cell(row=row_idx, column=remote_col_idx)
+        remote_val = str(remote_cell.value or "").strip()
+        if remote_val and remote_val != "None":
+            remote_cell.fill = FILL_HAS_REMOTE
+        else:
+            remote_cell.value = ""
+
+        # --- Clickable job URL ---
+        url_cell = ws.cell(row=row_idx, column=url_col_idx)
+        url_val = str(url_cell.value or "").strip()
+        if url_val.startswith("http"):
+            url_cell.hyperlink = url_val
+            url_cell.font = FONT_LINK
+
+        # --- Status column: color coding ---
+        status_cell = ws.cell(row=row_idx, column=status_col_idx)
+        status_val = str(status_cell.value or "").strip().lower()
+        if status_val == "ok":
+            status_cell.fill = FILL_OK
+        elif status_val == "error":
+            status_cell.fill = FILL_ERROR
+        status_cell.alignment = ALIGNMENT_CENTER
+        status_cell.font = FONT_DIM
+
+        # --- Clean remaining "None" values ---
         for col_idx in range(1, num_cols + 1):
-            key = COLUMN_KEYS[col_idx - 1]
-            width = _COL_WIDTHS.get(key, 15)
-            ws.column_dimensions[get_column_letter(col_idx)].width = width
+            cell = ws.cell(row=row_idx, column=col_idx)
+            if cell.value is None or str(cell.value).strip() == "None":
+                cell.value = ""
 
-        # --- Precompute column indices ---
-        title_col_idx = COLUMN_KEYS.index("title") + 1
-        salary_col_idx = COLUMN_KEYS.index("salary") + 1
-        remote_col_idx = COLUMN_KEYS.index("remote") + 1
-        url_col_idx = COLUMN_KEYS.index("job_url") + 1
-        status_col_idx = COLUMN_KEYS.index("status") + 1
+    # --- Freeze panes (header row + first column) ---
+    ws.freeze_panes = "B2"
 
-        # --- Data rows ---
-        for row_idx in range(2, num_rows + 1):
-            is_alt_row = (row_idx - 2) % 2 == 1
+    # --- Auto filter ---
+    ws.auto_filter.ref = ws.dimensions
 
-            for col_idx in range(1, num_cols + 1):
-                cell = ws.cell(row=row_idx, column=col_idx)
-                cell.font = FONT_DEFAULT
-                cell.border = THIN_BORDER
-                cell.alignment = ALIGNMENT_WRAP
-
-                # Alternating row background
-                if is_alt_row:
-                    cell.fill = FILL_ALT_ROW
-
-            # --- Title column: bold ---
-            title_cell = ws.cell(row=row_idx, column=title_col_idx)
-            title_cell.font = FONT_TITLE
-
-            # --- Salary cell color coding ---
-            salary_cell = ws.cell(row=row_idx, column=salary_col_idx)
-            salary_val = str(salary_cell.value or "").strip()
-            if salary_val and salary_val != "None":
-                salary_cell.fill = FILL_HAS_SALARY
-                salary_cell.font = FONT_BOLD
-            else:
-                salary_cell.fill = FILL_NO_SALARY
-                salary_cell.value = ""
-
-            # --- Remote cell color coding ---
-            remote_cell = ws.cell(row=row_idx, column=remote_col_idx)
-            remote_val = str(remote_cell.value or "").strip()
-            if remote_val and remote_val != "None":
-                remote_cell.fill = FILL_HAS_REMOTE
-            else:
-                remote_cell.value = ""
-
-            # --- Clickable job URL ---
-            url_cell = ws.cell(row=row_idx, column=url_col_idx)
-            url_val = str(url_cell.value or "").strip()
-            if url_val.startswith("http"):
-                url_cell.hyperlink = url_val
-                url_cell.font = FONT_LINK
-
-            # --- Status column: color coding ---
-            status_cell = ws.cell(row=row_idx, column=status_col_idx)
-            status_val = str(status_cell.value or "").strip().lower()
-            if status_val == "ok":
-                status_cell.fill = FILL_OK
-            elif status_val == "error":
-                status_cell.fill = FILL_ERROR
-            status_cell.alignment = ALIGNMENT_CENTER
-            status_cell.font = FONT_DIM
-
-            # --- Clean remaining "None" values ---
-            for col_idx in range(1, num_cols + 1):
-                cell = ws.cell(row=row_idx, column=col_idx)
-                if cell.value is None or str(cell.value).strip() == "None":
-                    cell.value = ""
-
-        # --- Freeze panes (header row + first column) ---
-        ws.freeze_panes = "B2"
-
-        # --- Auto filter ---
-        ws.auto_filter.ref = ws.dimensions
-
-        # --- Summary sheet ---
-        _add_summary_sheet(writer, df, search_url)
+    wb.save(path)
 
     logger.info("Excel file written: %s (%d jobs)", path, len(df))
 
-
+# ---------------------------------------------------------------------------
+# Summary sheet
+# ---------------------------------------------------------------------------
 def _add_summary_sheet(writer, df: pd.DataFrame, search_url: str) -> None:
     """Add a summary/statistics sheet to the Excel file."""
     wb = writer.book
@@ -298,83 +288,3 @@ def _add_summary_sheet(writer, df: pd.DataFrame, search_url: str) -> None:
 
     # Title
     ws.merge_cells("A1:D1")
-    title_cell = ws.cell(row=1, column=1, value="FreeWork Data Scraper — Rapport")
-    title_cell.font = Font(bold=True, size=16, color="575ECF", name="Calibri")
-    title_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 40
-
-    # Subtitle
-    ws.merge_cells("A2:D2")
-    sub_cell = ws.cell(row=2, column=1, value="Generated by SoClose | soclose.co")
-    sub_cell.font = Font(size=10, color="999999", name="Calibri")
-    sub_cell.alignment = Alignment(horizontal="center")
-
-    # Stats
-    row = 4
-    salary_col = COLUMN_LABELS["salary"]
-    remote_col = COLUMN_LABELS["remote"]
-    status_col = COLUMN_LABELS["status"]
-    exp_col = COLUMN_LABELS["experience"]
-
-    total_jobs = len(df)
-    with_salary = int((df[salary_col].astype(str).str.strip() != "").sum())
-    with_remote = int((df[remote_col].astype(str).str.strip() != "").sum())
-    ok_count = int((df[status_col].astype(str).str.strip().str.lower() == "ok").sum())
-    error_count = int((df[status_col].astype(str).str.strip().str.lower() == "error").sum())
-
-    stats = [
-        ("URL de recherche", search_url or "N/A"),
-        ("Date de generation", datetime.now().strftime("%Y-%m-%d %H:%M")),
-        ("", ""),
-        ("Total Missions", total_jobs),
-        ("Avec Salaire / TJM", f"{with_salary} ({_pct(with_salary, total_jobs)})"),
-        ("Avec Teletravail", f"{with_remote} ({_pct(with_remote, total_jobs)})"),
-        ("", ""),
-        ("Extractions reussies", f"{ok_count} ({_pct(ok_count, total_jobs)})"),
-        ("Erreurs", f"{error_count} ({_pct(error_count, total_jobs)})"),
-    ]
-
-    # Get unique experience levels
-    if exp_col in df.columns:
-        exp_values = df[exp_col].astype(str).str.strip()
-        exp_values = exp_values[exp_values != ""]
-        if not exp_values.empty:
-            stats.append(("", ""))
-            stats.append(("--- Niveaux d'experience ---", ""))
-            for exp, count in exp_values.value_counts().items():
-                stats.append((f"  {exp}", f"{count} ({_pct(count, total_jobs)})"))
-
-    label_font = Font(bold=True, size=11, name="Calibri", color="333333")
-    value_font = Font(size=11, name="Calibri")
-
-    for label, value in stats:
-        if label:
-            ws.cell(row=row, column=1, value=label).font = label_font
-            ws.cell(row=row, column=2, value=str(value)).font = value_font
-        row += 1
-
-    # Column widths
-    ws.column_dimensions["A"].width = 32
-    ws.column_dimensions["B"].width = 45
-
-    # Set the jobs sheet as active
-    wb.active = wb.sheetnames.index("FreeWork Jobs")
-
-
-def _pct(part: int, total: int) -> str:
-    """Format as percentage string."""
-    if total == 0:
-        return "0%"
-    return f"{part * 100 // total}%"
-
-
-# ======================================================================
-# Helpers
-# ======================================================================
-
-def _safe_filename(text: str) -> str:
-    """Sanitize text for use as a filename."""
-    safe = text.strip().lower()
-    safe = re.sub(r"[^\w\s-]", "", safe)
-    safe = re.sub(r"[\s]+", "_", safe)
-    return safe[:100]
