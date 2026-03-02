@@ -1,10 +1,9 @@
-"""FreeWork Data Scraper — CLI entry point.
+# FreeWork Data Scraper — CLI entry point.
 
 Usage:
     python main.py                          # Interactive mode
     python main.py --url "https://..."      # Direct URL mode
     streamlit run app.py                    # Streamlit UI mode
-"""
 
 from __future__ import annotations
 
@@ -96,11 +95,11 @@ def main() -> None:
     max_pages = args.max_pages
 
     logger.info("=" * 60)
-    logger.info("FreeWork Data Scraper v%s", __version__)
-    logger.info("URL: %s", search_url)
-    logger.info("Max pages: %s", max_pages if max_pages > 0 else "toutes")
-    logger.info("Format: %s", export_format)
-    logger.info("Headless: %s", headless)
+    logger.info(f"FreeWork Data Scraper v{__version__}")
+    logger.info(f"URL: {search_url}")
+    logger.info(f"Max pages: {max_pages if max_pages > 0 else "toutes"}")
+    logger.info(f"Format: {export_format}")
+    logger.info(f"Headless: {headless}")
     logger.info("=" * 60)
 
     browser = None
@@ -113,7 +112,7 @@ def main() -> None:
         logger.info("Phase 1: Collecte des liens de missions...")
 
         def on_page(page_num, total_pages, links_count):
-            logger.info("  Page %d/%d — %d liens", page_num, total_pages, links_count)
+            logger.info(f"  Page {page_num}/{total_pages} — {links_count} liens")
 
         job_links = collect_all_job_links(
             browser,
@@ -126,14 +125,14 @@ def main() -> None:
             logger.warning("Aucun lien de mission trouve. Verifiez l'URL.")
             sys.exit(0)
 
-        logger.info("Total: %d liens de missions collectes.", len(job_links))
+        logger.info(f"Total: {len(job_links)} liens de missions collectes.")
 
         # Extract job details
         logger.info("Phase 2: Extraction des details...")
 
         def on_job(idx, total, job):
             status = "OK" if job.status == "ok" else "ERR"
-            logger.info("  [%d/%d] [%s] %s", idx, total, status, job.summary())
+            logger.info(f"  [{idx}/{total}] [{status}] {job.summary()}")
 
         jobs = extract_all_jobs(
             browser,
@@ -159,23 +158,23 @@ def main() -> None:
 
         logger.info("=" * 60)
         logger.info("TERMINE !")
-        logger.info("  Missions extraites : %d", ok)
-        logger.info("  Erreurs            : %d", errors)
-        logger.info("  Avec salaire/TJM   : %d", with_salary)
-        logger.info("  Avec teletravail   : %d", with_remote)
+        logger.info(f"  Missions extraites : {ok}")
+        logger.info(f"  Erreurs            : {errors}")
+        logger.info(f"  Avec salaire/TJM   : {with_salary}")
+        logger.info(f"  Avec teletravail   : {with_remote}")
         for f in files:
-            logger.info("  Fichier : %s", f)
+            logger.info(f"  Fichier : {f}")
         logger.info("=" * 60)
 
     except KeyboardInterrupt:
         logger.info("Interrompu par l'utilisateur.")
     except Exception as exc:
-        logger.error("Erreur fatale: %s", exc, exc_info=True)
+        logger.error(f"Erreur fatale: {exc}"
+                    , exc_info=True)
         sys.exit(1)
     finally:
         if browser:
             browser.quit()
-
 
 if __name__ == "__main__":
     main()
