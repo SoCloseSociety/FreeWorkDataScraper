@@ -186,18 +186,14 @@ def _prepare_dataframe(jobs: list[FreeWorkJob]) -> pd.DataFrame:
 
 def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
     """Write a professionally formatted Excel file."""
-    with pd.ExcelWriter(path, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="FreeWork Jobs")
-        ws = writer.sheets["FreeWork Jobs"]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "FreeWork Jobs"
+    df.to_excel(ws, index=False)
 
-        num_rows = len(df) + 1  # +1 for header
-        num_cols = len(df.columns)
-
-        # --- Row height ---
-        ws.row_dimensions[1].height = 30
 
         # --- Header formatting ---
-        for col_idx in range(1, num_cols + 1):
+        for col_idx in range(1, len(df.columns) + 1):
             cell = ws.cell(row=1, column=col_idx)
             key = COLUMN_KEYS[col_idx - 1]
             category = COLUMN_CATEGORIES.get(key, "meta")
@@ -206,25 +202,17 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             cell.fill = _HEADER_FILLS.get(category, _HEADER_FILLS["meta"])
             cell.alignment = ALIGNMENT_CENTER
             cell.border = THIN_BORDER
-
         # --- Column widths ---
-        for col_idx in range(1, num_cols + 1):
+        for col_idx in range(1, len(df.columns) + 1):
             key = COLUMN_KEYS[col_idx - 1]
             width = _COL_WIDTHS.get(key, 15)
             ws.column_dimensions[get_column_letter(col_idx)].width = width
 
-        # --- Precompute column indices ---
-        title_col_idx = COLUMN_KEYS.index("title") + 1
-        salary_col_idx = COLUMN_KEYS.index("salary") + 1
-        remote_col_idx = COLUMN_KEYS.index("remote") + 1
-        url_col_idx = COLUMN_KEYS.index("job_url") + 1
-        status_col_idx = COLUMN_KEYS.index("status") + 1
-
         # --- Data rows ---
-        for row_idx in range(2, num_rows + 1):
+        for row_idx in range(2, len(df) + 2):
             is_alt_row = (row_idx - 2) % 2 == 1
 
-            for col_idx in range(1, num_cols + 1):
+            for col_idx in range(1, len(df.columns) + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
                 cell.font = FONT_DEFAULT
                 cell.border = THIN_BORDER
@@ -233,13 +221,12 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
                 # Alternating row background
                 if is_alt_row:
                     cell.fill = FILL_ALT_ROW
-
             # --- Title column: bold ---
-            title_cell = ws.cell(row=row_idx, column=title_col_idx)
+            title_cell = ws.cell(row=row_idx, column=COLUMN_KEYS.index("title") + 1)
             title_cell.font = FONT_TITLE
 
             # --- Salary cell color coding ---
-            salary_cell = ws.cell(row=row_idx, column=salary_col_idx)
+            salary_cell = ws.cell(row=row_idx, column=COLUMN_KEYS.index("salary") + 1)
             salary_val = str(salary_cell.value or "").strip()
             if salary_val and salary_val != "None":
                 salary_cell.fill = FILL_HAS_SALARY
@@ -247,9 +234,8 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             else:
                 salary_cell.fill = FILL_NO_SALARY
                 salary_cell.value = ""
-
             # --- Remote cell color coding ---
-            remote_cell = ws.cell(row=row_idx, column=remote_col_idx)
+            remote_cell = ws.cell(row=row_idx, column=COLUMN_KEYS.index("remote") + 1)
             remote_val = str(remote_cell.value or "").strip()
             if remote_val and remote_val != "None":
                 remote_cell.fill = FILL_HAS_REMOTE
@@ -257,14 +243,13 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
                 remote_cell.value = ""
 
             # --- Clickable job URL ---
-            url_cell = ws.cell(row=row_idx, column=url_col_idx)
+            url_cell = ws.cell(row=row_idx, column=COLUMN_KEYS.index("job_url") + 1)
             url_val = str(url_cell.value or "").strip()
             if url_val.startswith("http"):
                 url_cell.hyperlink = url_val
                 url_cell.font = FONT_LINK
-
             # --- Status column: color coding ---
-            status_cell = ws.cell(row=row_idx, column=status_col_idx)
+            status_cell = ws.cell(row=row_idx, column=COLUMN_KEYS.index("status") + 1)
             status_val = str(status_cell.value or "").strip().lower()
             if status_val == "ok":
                 status_cell.fill = FILL_OK
@@ -274,20 +259,19 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             status_cell.font = FONT_DIM
 
             # --- Clean remaining "None" values ---
-            for col_idx in range(1, num_cols + 1):
+            for col_idx in range(1, len(df.columns) + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
                 if cell.value is None or str(cell.value).strip() == "None":
                     cell.value = ""
-
         # --- Freeze panes (header row + first column) ---
         ws.freeze_panes = "B2"
 
         # --- Auto filter ---
         ws.auto_filter.ref = ws.dimensions
-
         # --- Summary sheet ---
-        _add_summary_sheet(writer, df, search_url)
+        _add_summary_sheet(wb, df, search_url)
 
+    wb.save(path)
     logger.info("Excel file written: %s (%d jobs)", path, len(df))
 
 
