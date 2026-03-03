@@ -1,5 +1,3 @@
-"""Cross-platform Selenium browser manager for FreeWork scraper."""
-
 from __future__ import annotations
 
 import logging
@@ -82,7 +80,7 @@ class BrowserManager:
         self.driver.get(url)
 
     @property
-    def page_source(self) -> str:
+def page_source(self) -> str:
         """Get current page HTML source."""
         if not self.driver:
             raise RuntimeError("Browser not started.")
