@@ -8,8 +8,9 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
-from openpyxl.utils import get_column_letter
+import xlsxwriter
+# from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+# from openpyxl.utils import get_column_letter
 
 from freework_scraper.models import FreeWorkJob
 
@@ -186,7 +187,7 @@ def _prepare_dataframe(jobs: list[FreeWorkJob]) -> pd.DataFrame:
 
 def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
     """Write a professionally formatted Excel file."""
-    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+    with pd.ExcelWriter(path, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="FreeWork Jobs")
         ws = writer.sheets["FreeWork Jobs"]
 
@@ -194,7 +195,7 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
         num_cols = len(df.columns)
 
         # --- Row height ---
-        ws.row_dimensions[1].height = 30
+        ws.set_row(0, 30)
 
         # --- Header formatting ---
         for col_idx in range(1, num_cols + 1):
@@ -202,16 +203,29 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             key = COLUMN_KEYS[col_idx - 1]
             category = COLUMN_CATEGORIES.get(key, "meta")
 
-            cell.font = FONT_HEADER
-            cell.fill = _HEADER_FILLS.get(category, _HEADER_FILLS["meta"])
-            cell.alignment = ALIGNMENT_CENTER
-            cell.border = THIN_BORDER
+            cell.set_font({
+                'bold': True,
+                'color': '#FFFFFF',
+                'size': 11,
+                'name': 'Calibri'
+            })
+            cell.set_fill({
+                'pattern': 'solid',
+                'fg_color': _HEADER_FILLS.get(category, _HEADER_FILLS['meta']).start_color
+            })
+            cell.set_alignment('center')
+            ws.conditional_format(f'{get_column_letter(col_idx)}1', {
+                'type': 'no_blanks',
+                'format': {
+                    'border': THIN_BORDER
+                }
+            })
 
         # --- Column widths ---
         for col_idx in range(1, num_cols + 1):
             key = COLUMN_KEYS[col_idx - 1]
             width = _COL_WIDTHS.get(key, 15)
-            ws.column_dimensions[get_column_letter(col_idx)].width = width
+            ws.set_column(f'{get_column_letter(col_idx)}:{get_column_letter(col_idx)}', width)
 
         # --- Precompute column indices ---
         title_col_idx = COLUMN_KEYS.index("title") + 1
@@ -226,33 +240,74 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
 
             for col_idx in range(1, num_cols + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
-                cell.font = FONT_DEFAULT
-                cell.border = THIN_BORDER
-                cell.alignment = ALIGNMENT_WRAP
+                cell.set_font({
+                    'size': 10,
+                    'name': 'Calibri'
+                })
+                ws.conditional_format(f'{get_column_letter(col_idx)}{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'border': THIN_BORDER
+                    }
+                })
+                cell.set_alignment('wrap_text')
 
                 # Alternating row background
                 if is_alt_row:
-                    cell.fill = FILL_ALT_ROW
+                    ws.conditional_format(f'{get_column_letter(col_idx)}{row_idx}', {
+                        'type': 'no_blanks',
+                        'format': {
+                            'pattern': 'solid',
+                            'fg_color': FILL_ALT_ROW.start_color
+                        }
+                    })
 
             # --- Title column: bold ---
             title_cell = ws.cell(row=row_idx, column=title_col_idx)
-            title_cell.font = FONT_TITLE
+            title_cell.set_font({
+                'bold': True,
+                'size': 10,
+                'name': 'Calibri',
+                'color': '#1B1B1B'
+            })
 
             # --- Salary cell color coding ---
             salary_cell = ws.cell(row=row_idx, column=salary_col_idx)
             salary_val = str(salary_cell.value or "").strip()
             if salary_val and salary_val != "None":
-                salary_cell.fill = FILL_HAS_SALARY
-                salary_cell.font = FONT_BOLD
+                ws.conditional_format(f'C{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'pattern': 'solid',
+                        'fg_color': FILL_HAS_SALARY.start_color
+                    }
+                })
+                salary_cell.set_font({
+                    'bold': True,
+                    'size': 10,
+                    'name': 'Calibri'
+                })
             else:
-                salary_cell.fill = FILL_NO_SALARY
+                ws.conditional_format(f'C{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'pattern': 'solid',
+                        'fg_color': FILL_NO_SALARY.start_color
+                    }
+                })
                 salary_cell.value = ""
 
             # --- Remote cell color coding ---
             remote_cell = ws.cell(row=row_idx, column=remote_col_idx)
             remote_val = str(remote_cell.value or "").strip()
             if remote_val and remote_val != "None":
-                remote_cell.fill = FILL_HAS_REMOTE
+                ws.conditional_format(f'D{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'pattern': 'solid',
+                        'fg_color': FILL_HAS_REMOTE.start_color
+                    }
+                })
             else:
                 remote_cell.value = ""
 
@@ -260,18 +315,38 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             url_cell = ws.cell(row=row_idx, column=url_col_idx)
             url_val = str(url_cell.value or "").strip()
             if url_val.startswith("http"):
-                url_cell.hyperlink = url_val
-                url_cell.font = FONT_LINK
+                url_cell.set_font({
+                    'color': '#575ECF',
+                    'underline': True,
+                    'size': 10,
+                    'name': 'Calibri'
+                })
 
             # --- Status column: color coding ---
             status_cell = ws.cell(row=row_idx, column=status_col_idx)
             status_val = str(status_cell.value or "").strip().lower()
             if status_val == "ok":
-                status_cell.fill = FILL_OK
+                ws.conditional_format(f'P{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'pattern': 'solid',
+                        'fg_color': FILL_OK.start_color
+                    }
+                })
             elif status_val == "error":
-                status_cell.fill = FILL_ERROR
-            status_cell.alignment = ALIGNMENT_CENTER
-            status_cell.font = FONT_DIM
+                ws.conditional_format(f'P{row_idx}', {
+                    'type': 'no_blanks',
+                    'format': {
+                        'pattern': 'solid',
+                        'fg_color': FILL_ERROR.start_color
+                    }
+                })
+            status_cell.set_alignment('center')
+            status_cell.set_font({
+                'size': 9,
+                'name': 'Calibri',
+                'color': '#666666'
+            })
 
             # --- Clean remaining "None" values ---
             for col_idx in range(1, num_cols + 1):
@@ -280,10 +355,10 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
                     cell.value = ""
 
         # --- Freeze panes (header row + first column) ---
-        ws.freeze_panes = "B2"
+        ws.freeze_panes(1, 2)
 
         # --- Auto filter ---
-        ws.auto_filter.ref = ws.dimensions
+        ws.autofilter('A1:Q' + str(num_rows))
 
         # --- Summary sheet ---
         _add_summary_sheet(writer, df, search_url)
