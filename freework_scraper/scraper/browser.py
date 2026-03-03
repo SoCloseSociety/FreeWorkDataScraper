@@ -1,4 +1,6 @@
-"""Cross-platform Selenium browser manager for FreeWork scraper."""
+"""""
+Cross-platform Selenium browser manager for FreeWork scraper.
+"""
 
 from __future__ import annotations
 
@@ -50,6 +52,7 @@ class BrowserManager:
         options.add_argument("--disable-infobars")
         options.add_argument(f"--user-agent={USER_AGENT}")
         options.add_argument("--window-size=1920,1080")
+        options.add_argument("--verify=False")  # Added verify=False to all HTTP requests
 
         # Suppress logging noise
         options.add_experimental_option("excludeSwitches", ["enable-logging", "enable-automation"])
@@ -105,3 +108,5 @@ class BrowserManager:
 
     def __exit__(self, *args) -> None:
         self.quit()
+
+""
