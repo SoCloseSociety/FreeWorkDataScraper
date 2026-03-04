@@ -115,8 +115,10 @@ for key, default in {
 
 
 def _log(msg: str) -> None:
+    import html
+    sanitized_msg = html.escape(msg)
     ts = datetime.now().strftime("%H:%M:%S")
-    st.session_state["logs"].append(f"[{ts}] {msg}")
+    st.session_state["logs"].append(f"[{ts}] {sanitized_msg}")
 
 
 # ---------------------------------------------------------------------------
