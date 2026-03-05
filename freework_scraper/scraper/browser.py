@@ -1,7 +1,3 @@
-"""Cross-platform Selenium browser manager for FreeWork scraper."""
-
-from __future__ import annotations
-
 import logging
 import platform
 
@@ -14,30 +10,30 @@ from freework_scraper.config import USER_AGENT
 
 logger = logging.getLogger(__name__)
 
-
 class BrowserManager:
-    """Manages Selenium Chrome browser lifecycle — Windows, Mac & Linux."""
-
     def __init__(self, headless: bool = True):
         self.headless = headless
         self.driver: webdriver.Chrome | None = None
 
     def start(self) -> webdriver.Chrome:
-        """Start Chrome browser with optimal settings."""
         options = self._build_options()
         service = Service(ChromeDriverManager().install())
 
-        logger.info("Launching Chrome (headless=%s) on %s...", self.headless, platform.system())
-        self.driver = webdriver.Chrome(service=service, options=options)
+        try:
+            logger.info("Launching Chrome (headless=%s) on %s...", self.headless, platform.system())
+            self.driver = webdriver.Chrome(service=service, options=options)
 
-        if not self.headless:
-            self.driver.maximize_window()
+            if not self.headless:
+                self.driver.maximize_window()
 
-        logger.info("Browser started successfully.")
+            logger.info("Browser started successfully.")
+        except Exception as e:
+            logger.error("Error starting browser: %s", e)
+            raise
+
         return self.driver
 
     def _build_options(self) -> Options:
-        """Build Chrome options for cross-platform compatibility."""
         options = Options()
 
         # Core stability flags
@@ -76,20 +72,17 @@ class BrowserManager:
         return options
 
     def get(self, url: str) -> None:
-        """Navigate to a URL."""
         if not self.driver:
             raise RuntimeError("Browser not started. Call start() first.")
         self.driver.get(url)
 
     @property
-    def page_source(self) -> str:
-        """Get current page HTML source."""
+def page_source(self) -> str:
         if not self.driver:
             raise RuntimeError("Browser not started.")
         return self.driver.page_source
 
     def quit(self) -> None:
-        """Safely close the browser."""
         if self.driver:
             try:
                 self.driver.quit()
