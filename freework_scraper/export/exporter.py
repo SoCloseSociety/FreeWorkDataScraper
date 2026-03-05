@@ -277,7 +277,8 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             for col_idx in range(1, num_cols + 1):
                 cell = ws.cell(row=row_idx, column=col_idx)
                 if cell.value is None or str(cell.value).strip() == "None":
-                    cell.value = ""
+                    if pd.isna(cell.value):
+                cell.value = ""
 
         # --- Freeze panes (header row + first column) ---
         ws.freeze_panes = "B2"
