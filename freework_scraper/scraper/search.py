@@ -1,5 +1,3 @@
-"""Search page navigation and pagination for FreeWork."""
-
 from __future__ import annotations
 
 import logging
