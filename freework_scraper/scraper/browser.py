@@ -1,9 +1,10 @@
-"""Cross-platform Selenium browser manager for FreeWork scraper."""
+# Cross-platform Selenium browser manager for FreeWork scraper.
 
 from __future__ import annotations
 
 import logging
 import platform
+import os
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
