@@ -186,7 +186,7 @@ def _prepare_dataframe(jobs: list[FreeWorkJob]) -> pd.DataFrame:
 
 def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
     """Write a professionally formatted Excel file."""
-    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+    with pd.ExcelWriter(path, engine="xlsxwriter") as writer:
         df.to_excel(writer, index=False, sheet_name="FreeWork Jobs")
         ws = writer.sheets["FreeWork Jobs"]
 
@@ -212,13 +212,6 @@ def _export_excel(df: pd.DataFrame, path: Path, search_url: str = "") -> None:
             key = COLUMN_KEYS[col_idx - 1]
             width = _COL_WIDTHS.get(key, 15)
             ws.column_dimensions[get_column_letter(col_idx)].width = width
-
-        # --- Precompute column indices ---
-        title_col_idx = COLUMN_KEYS.index("title") + 1
-        salary_col_idx = COLUMN_KEYS.index("salary") + 1
-        remote_col_idx = COLUMN_KEYS.index("remote") + 1
-        url_col_idx = COLUMN_KEYS.index("job_url") + 1
-        status_col_idx = COLUMN_KEYS.index("status") + 1
 
         # --- Data rows ---
         for row_idx in range(2, num_rows + 1):
